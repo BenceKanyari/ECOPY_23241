@@ -29,8 +29,8 @@ class UniformDistribution:
         else:
             raise ValueError("p must be between 0 and 1")
 
-    def gen_random(self):
-        return self.rand.uniform(self.a, self.b)
+    def gen_rand(self):
+        return self.ppf(self.rand.random())
 
     def mean(self):
         return (self.a + self.b) / 2
@@ -87,8 +87,8 @@ class NormalDistribution:
         else:
             raise ValueError("p must be between 0 and 1")
 
-    def gen_random(self):
-        return self.rand.normal(self.loc, self.scale)
+    def gen_rand(self):
+        return self.ppf(self.rand.random())
 
     def mean(self):
         return self.loc
@@ -127,8 +127,8 @@ class CauchyDistribution:
         else:
             raise ValueError("p must be between 0 and 1")
 
-    def gen_random(self):
-        return self.rand.paretovariate(1) * self.scale + self.loc
+    def gen_rand(self):
+        return self.ppf(self.rand.random())
 
     def mean(self):
         raise Exception("Moment undefined")
