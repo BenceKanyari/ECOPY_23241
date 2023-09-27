@@ -30,7 +30,6 @@ def random_reorder(input_list):
     return random.sample(input_list, len(input_list))
 
 
-
 def uniform_one_to_five():
     return random.uniform(1, 6)
 
