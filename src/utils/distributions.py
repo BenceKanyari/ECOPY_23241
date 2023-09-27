@@ -2,7 +2,6 @@ import math
 import pyerf
 
 
-
 class UniformDistribution:
     def __init__(self, rand, a, b):
         self.rand = rand
@@ -78,7 +77,7 @@ class NormalDistribution:
 
     def cdf(self, x):
         z = (x - self.loc) / math.sqrt(self.scale)
-        return 0.5 * (1 + pyerf.erf(z / math.sqrt(2)))
+        return 0.5 * (1 + math.erf(z / math.sqrt(2)))
 
     def ppf(self, p):
         if 0 <= p <= 1:
@@ -116,7 +115,7 @@ class CauchyDistribution:
         self.scale = scale
 
     def pdf(self, x):
-        return (1 / (math.pi * self.scale)) * (self.scale ** 2 / ((x - self.loc) ** 2 + self.scale ** 2))
+        return (1 / math.pi ) * (self.scale / ((x - self.loc) ** 2 + self.scale ** 2))
 
     def cdf(self, x):
         return 0.5 + (1 / math.pi) * math.atan((x - self.loc) / self.scale)

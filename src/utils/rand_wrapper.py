@@ -22,7 +22,7 @@ def hundred_large_random():
 
 
 def five_random_number_div_three():
-    div_three_list = [x for x in range(9, 1000) if x % 3 == 0]
+    div_three_list = [x for x in range(9, 1001) if x % 3 == 0]
     return random.sample(div_three_list, 5)
 
 
