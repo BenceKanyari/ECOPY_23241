@@ -107,7 +107,7 @@ class TestUniformDistribution:
 
     def test_moments(self):
         # Arrange
-        expected = [7 / 2, 5 / 12, 0, -6 / 5]
+        expected = [7 / 2, 25 / 12, 0, -6 / 5]
 
         # Act
         dist = dst.UniformDistribution(self.rand_gen, self.lower_bound, self.upper_bound)

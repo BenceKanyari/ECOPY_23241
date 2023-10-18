@@ -23,11 +23,11 @@ def countries_over_five(input_df):
 
 def countries_starting_with_g(input_df):
     new_df = input_df.copy()
-    return new_df.loc[[x[0]=='G' for x in new_df['Team']], 'Team'].to_frame()
+    return new_df.loc[[x[0]=='G' for x in new_df['Team']], 'Team']
 
 def first_seven_columns(input_df):
     new_df = input_df.copy()
-    return new_df.head(7)
+    return new_df.iloc[:,0:7]
 
 def every_column_except_last_three(input_df):
     new_df = input_df.copy()
@@ -39,17 +39,17 @@ def sliced_view(input_df, columns_to_keep, column_to_filter, rows_to_keep):
 
 def generate_quartile(input_df):
     new_df = input_df.copy()
-    new_df['Quartile'] = pd.cut(new_df['Goals'], bins=[0, 2, 4, 5, 12], labels=[4, 3, 2, 1])
+    new_df['Quartile'] = pd.cut(new_df['Goals'], bins=[0, 2, 4, 5, 12], labels=[4, 3, 2, 1]).astype('int64')
     return new_df
 
 def average_yellow_in_quartiles(input_df):
     new_df = input_df.copy()
-    return new_df.groupby('Quartile')['Passes'].mean().to_frame()
+    return new_df.groupby('Quartile')['Passes'].mean()
 
 
 def minmax_block_in_quartile(input_df):
     new_df = input_df.copy()
-    return new_df.groupby('Quartile')['Passes'].agg([min, max])
+    return new_df.groupby('Quartile')['Blocks'].agg([min, max])
 
 
 def scatter_goals_shots(input_df):
@@ -76,7 +76,7 @@ def scatter_goals_shots_by_quartile(input_df):
     return fig
 
 
-def generate_mean_trajectories(pareto_distribution, number_of_trajectories, length_of_trajectory):
+def gen_pareto_mean_trajectories(pareto_distribution, number_of_trajectories, length_of_trajectory):
     pareto_distribution.rand.seed(42)
     trajectories = []
 
