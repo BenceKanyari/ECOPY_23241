@@ -1,5 +1,7 @@
 import pandas as pd
 import statsmodels.api as sm
+import scipy.stats as stats
+import numpy as np
 
 class LinearRegressionSM:
     def __init__(self, left_hand_side, right_hand_side):
@@ -31,3 +33,57 @@ class LinearRegressionSM:
         aic = self._model.aic
         bic = self._model.bic
         return f'Adjusted R-squared: {adjusted_r_squared:.3}, Akaike IC: {aic:.3}, Bayes IC: {bic:.3}'
+
+
+class LinearRegressionNP:
+    def __init__(self, left_hand_side, right_hand_side):
+        self.left_hand_side = left_hand_side
+        self.right_hand_side = right_hand_side
+        self.coefficients = None
+        self.residuals = None
+        self.p_values = None
+        self.crs = None
+        self.ars = None
+
+    def fit(self):
+        X = np.column_stack((np.ones(len(self.right_hand_side)), self.right_hand_side))
+        y = self.left_hand_side
+        self.coefficients = np.linalg.inv(X.T @ X) @ X.T @ y
+
+        n, k = X.shape
+        self.residuals = y - X @ self.coefficients
+        sigma_squared = np.sum(self.residuals ** 2) / (n - k)
+        var_beta = np.linalg.inv(X.T @ X) * sigma_squared
+        t_statistic = self.coefficients / np.sqrt(np.diag(var_beta))
+        self.p_values = 2 * (1 - stats.t.cdf(np.abs(t_statistic), df=n-k))
+
+        rss = np.sum(self.residuals ** 2)
+        tss = np.sum((y - np.mean(y)) ** 2)
+
+        self.crs = 1 - rss / tss
+        self.ars = 1 - (rss / (n - k)) / (tss / (n - 1))
+    def get_params(self):
+        return pd.Series(self.coefficients, name='Beta coefficients')
+
+    def get_pvalues(self):
+        return pd.Series(self.p_values, name='P-values for the corresponding coefficients')
+
+    def get_wald_test_result(self, constraints):
+        constraints = np.array(constraints)
+        n = len(self.left_hand_side)
+        m, k = constraints.shape
+        sigma_squared = np.sum(self.residuals ** 2) / (n - k)
+        X = np.column_stack((np.ones(len(self.right_hand_side)), self.right_hand_side))
+
+        H = constraints @ np.linalg.inv(X.T @ X) @ constraints.T
+        wald = (constraints @ self.coefficients).T @ np.linalg.inv(H) @ (constraints @ self.coefficients)
+        wald = wald / m / sigma_squared
+        p_value = 1 - stats.f.cdf(wald, dfn=m, dfd=n-k)
+
+        return f'Wald: {wald:.3f}, p-value: {p_value:.3f}'
+
+    def get_model_goodness_values(self):
+        crs = self.crs
+        ars = self.ars
+
+        return f'Centered R-squared: {crs:.3f}, Adjusted R-squared: {ars:.3f}'
