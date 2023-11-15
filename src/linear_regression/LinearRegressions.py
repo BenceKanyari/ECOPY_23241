@@ -124,6 +124,7 @@ class LinearRegressionGLS:
         rss = y.T @ self.V_inv @ X @ np.linalg.inv(X.T @ self.V_inv @ X) @ X.T @ self.V_inv @ y
         tss = y.T @ self.V_inv @ y
 
+        self.crs = 1 - rss / tss
         self.ars = 1 - (rss / (n - k)) / (tss / (n - 1))
     def get_params(self):
         return pd.Series(self.coefficients, name='Beta coefficients')
