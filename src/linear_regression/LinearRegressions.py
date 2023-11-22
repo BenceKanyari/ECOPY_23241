@@ -2,6 +2,7 @@ import pandas as pd
 import statsmodels.api as sm
 import scipy.stats as stats
 import numpy as np
+from scipy.optimize import minimize
 
 class LinearRegressionSM:
     def __init__(self, left_hand_side, right_hand_side):
@@ -145,6 +146,60 @@ class LinearRegressionGLS:
         p_value = 1 - stats.f.cdf(wald, dfn=m, dfd=n-k)
 
         return f'Wald: {wald:.3f}, p-value: {p_value:.3f}'
+
+    def get_model_goodness_values(self):
+        crs = self.crs
+        ars = self.ars
+
+        return f'Centered R-squared: {crs:.3f}, Adjusted R-squared: {ars:.3f}'
+
+
+class LinearRegressionML:
+
+    def __init__(self, left_hand_side, right_hand_side):
+        self.left_hand_side = left_hand_side
+        self.right_hand_side = right_hand_side
+        self.coefficients = None
+        self.residuals = None
+        self.p_values = None
+        self.crs = None
+        self.ars = None
+
+    def calculate_neg_loglikelihood(self, params):
+        X = np.column_stack((np.ones(len(self.right_hand_side)), self.right_hand_side))
+        y = self.left_hand_side
+        beta0, beta1, beta2, beta3, sig = params
+        betas = np.array([beta0, beta1, beta2, beta3])
+        pred = X @ betas
+        LL = np.sum(stats.norm.logpdf(y, pred, sig))
+
+        return -LL
+
+    def fit(self):
+        opt = minimize(self.calculate_neg_loglikelihood, np.array([.1, .1, .1, .1, .1]), method='L-BFGS-B')
+        beta0, beta1, beta2, beta3, sig = opt.x
+        self.coefficients = np.array([beta0, beta1, beta2, beta3])
+
+        X = np.column_stack((np.ones(len(self.right_hand_side)), self.right_hand_side))
+        y = self.left_hand_side
+        n, k = X.shape
+        self.residuals = y - X @ self.coefficients
+        sigma_squared = np.sum(self.residuals ** 2) / (n - k)
+        var_beta = np.linalg.inv(X.T @ X) * sigma_squared
+        t_statistic = self.coefficients / np.sqrt(np.diag(var_beta))
+        self.p_values = 2 * (1 - stats.t.cdf(np.abs(t_statistic), df=n - k))
+
+        rss = np.sum(self.residuals ** 2)
+        tss = np.sum((y - np.mean(y)) ** 2)
+
+        self.crs = 1 - rss / tss
+        self.ars = 1 - (rss / (n - k)) / (tss / (n - 1))
+
+    def get_params(self):
+        return pd.Series(self.coefficients, name='Beta coefficients')
+
+    def get_pvalues(self):
+        return pd.Series(self.p_values, name='P-values for the corresponding coefficients')
 
     def get_model_goodness_values(self):
         crs = self.crs
