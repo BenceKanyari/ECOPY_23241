@@ -184,7 +184,7 @@ class LinearRegressionML:
         y = self.left_hand_side
         n, k = X.shape
         self.residuals = y - X @ self.coefficients
-        sigma_squared = np.sum(self.residuals ** 2) / (n - k)
+        sigma_squared = sig**2 * n / (n - k)
         var_beta = np.linalg.inv(X.T @ X) * sigma_squared
         t_statistic = self.coefficients / np.sqrt(np.diag(var_beta))
         self.p_values = 2 * (1 - stats.t.cdf(np.abs(t_statistic), df=n - k))
