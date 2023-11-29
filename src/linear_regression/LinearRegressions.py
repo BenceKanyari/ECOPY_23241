@@ -89,6 +89,70 @@ class LinearRegressionNP:
 
         return f'Centered R-squared: {crs:.3f}, Adjusted R-squared: {ars:.3f}'
 
+    def get_paired_se_and_percentile_ci(self,number_of_bootstrap_samples,alpha,random_seed):
+        self.fit()
+        X = np.column_stack((np.ones(len(self.right_hand_side)), self.right_hand_side))
+        y = self.left_hand_side
+        B = number_of_bootstrap_samples
+        np.random.seed(random_seed)
+        beta = self.coefficients[1]
+        n = len(y)
+
+        beta_boot = np.zeros([B,4])
+
+        # bootstrap samples
+        for j in range(B):
+            idx = np.random.choice(n, size=n, replace=True)
+
+            x_boot = X[idx]
+            y_boot = y[idx]
+            coefficients = np.linalg.inv(x_boot.T @ x_boot) @ x_boot.T @ y_boot
+            beta_boot[j,:] = coefficients
+
+        betas = beta_boot[:,1]
+
+        bse = np.std(betas)
+
+        lb = np.quantile(betas, alpha / 2)
+        ub = np.quantile(betas, 1 - alpha / 2)
+
+        return f'Paired Bootstraped SE: {bse:.3f}, CI: [{lb:.3f}, {ub:.3f}]'
+
+    def get_wild_se_and_normal_ci(self,number_of_bootstrap_samples,alpha,random_seed):
+        self.fit()
+        X = np.column_stack((np.ones(len(self.right_hand_side)), self.right_hand_side))
+        y = self.left_hand_side
+        B = number_of_bootstrap_samples
+        np.random.seed(random_seed)
+        beta = self.coefficients[1]
+        n = len(y)
+
+        beta_boot = np.zeros([B,4])
+
+        # bootstrap samples
+        for j in range(B):
+            idx = np.random.choice(n, size=n, replace=True)
+
+            x_boot = X[idx]
+            v = np.random.normal(0,1,n)
+            y_boot = x_boot @ self.coefficients + v * self.residuals[idx]
+
+            coefficients = np.linalg.inv(x_boot.T @ x_boot) @ x_boot.T @ y_boot
+            beta_boot[j,:] = coefficients
+
+        betas = beta_boot[:,1]
+
+        bse = np.std(betas)
+
+        z = stats.norm.ppf(alpha / 2)
+
+        lb = beta + z*bse
+        ub = beta - z*bse
+
+        return f'Wild Bootstraped SE: {bse:.3f}, CI: [{lb:.3f}, {ub:.3f}]'
+
+
+
 
 class LinearRegressionGLS:
     def __init__(self, left_hand_side, right_hand_side):
